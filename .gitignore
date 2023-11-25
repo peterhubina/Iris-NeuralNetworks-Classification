@@ -165,6 +165,6 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
-.idea
+/.idea
 .DS_Store
-.ipynb_checkpoints
+/.ipynb_checkpoints

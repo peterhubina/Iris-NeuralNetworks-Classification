@@ -13,14 +13,15 @@ from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader, TensorDataset
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
 # In[2]:
 
 
 # Nacitanie iris datasetu
-# X - features
-# y - triedy
+# X - features (data)
+# y - triedy (setosa, versicolor, virginica)
 iris = load_iris()
 X = iris.data
 y = iris.target
@@ -33,18 +34,22 @@ print("Dataset shape:", X.shape)
 print("Labels:", set(y))
 print("Classes:", iris['target_names'])
 
+iris_df = pd.DataFrame(X, columns=iris.feature_names)
+iris_df['species'] = pd.Categorical.from_codes(iris.target, iris.target_names)
+iris_df.head()
+
 
 # In[4]:
 
 
-# Rozdelenie datasetu na trenovaciu a testovaciu cast
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=40)
+# Rozdelenie datasetu na trenovaciu a testovaciu cast (test_size = 0.3 znamena 30% testovacia cast)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
 
 
 # In[5]:
 
 
-# Vizualizacia datasetu
+# Vizualizacia datasetu pomocou bodoveho grafu
 def create_scatter_plot(X, y, features, title):
     # Set up the figure and axis
     plt.figure(figsize=(12, 10))
@@ -93,7 +98,7 @@ X_test = scaler.transform(X_test)
 # In[9]:
 
 
-# Convert to PyTorch tensors
+# Konvertovanie na tensory
 X_train = torch.tensor(X_train, dtype=torch.float32)
 y_train = torch.tensor(y_train, dtype=torch.long)
 
@@ -104,10 +109,11 @@ y_test = torch.tensor(y_test, dtype=torch.long)
 # In[10]:
 
 
-# Create data loaders
+# Vytvorenie dataset objektov
 train_dataset = TensorDataset(X_train, y_train)
 test_dataset = TensorDataset(X_test, y_test)
 
+# Vytvorenie loaderov pre loadovanie dat pocas treningu
 train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False)
 
@@ -123,18 +129,21 @@ test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False)
 # In[12]:
 
 
-# Define the MLP model
+# Definovanie MLP Modelu
 class MLPModel(nn.Module):
     def __init__(self):
         super(MLPModel, self).__init__()
         # 4 input features, 8 neuronov
         self.fc1 = nn.Linear(4, 10)
+        # Hidden layer - 10 neuronov
         self.fc2 = nn.Linear(10, 10)
-        # output layer
+        # output layer, 3 output features
         self.fc3 = nn.Linear(10, 3)
 
+    # Metoda pre predikciu
     def forward(self, x):
-        x = torch.relu(self.fc1(x))
+        x = self.fc1(x)
+        # Aplikovanie relu pre hidder layer
         x = torch.relu(self.fc2(x))
         x = self.fc3(x)
         return x
@@ -143,7 +152,7 @@ class MLPModel(nn.Module):
 # In[13]:
 
 
-# Define the CNN model
+# Definovanie CNN Modelu
 class CNNModel(nn.Module):
     def __init__(self):
         super(CNNModel, self).__init__()
@@ -163,7 +172,7 @@ class CNNModel(nn.Module):
 # In[14]:
 
 
-# Define the RNN model
+# Definovanie RNN Modelu
 class RNNModel(nn.Module):
     def __init__(self):
         super(RNNModel, self).__init__()
@@ -181,7 +190,7 @@ class RNNModel(nn.Module):
 # In[15]:
 
 
-# Training loop
+# Trenovaci loop, pouziva back propagation
 def train(model, criterion, optimizer, epoch_number):
     for epoch in range(epoch_number):
         for data in train_loader:
@@ -197,6 +206,7 @@ def train(model, criterion, optimizer, epoch_number):
 # In[16]:
 
 
+# Funkcia pre vyhodnotenie modelu na testovacich datach
 def evaluate_model(model, data_loader):
     model.eval()
     total = 0
@@ -219,22 +229,22 @@ mlp_model = MLPModel()
 cnn_model = CNNModel()
 rnn_model = RNNModel()
 
-# Define loss function and optimizers
+# Definovanie loss funkcie a optimalizatorov
 criterion = nn.CrossEntropyLoss()
 
 mlp_optimizer = optim.Adam(mlp_model.parameters(), lr=0.001)
 cnn_optimizer = optim.Adam(cnn_model.parameters(), lr=0.001)
 rnn_optimizer = optim.Adam(rnn_model.parameters(), lr=0.001)
 
-# Train models
+# Trenovacie modely
 print("MLP")
-train(mlp_model, criterion, mlp_optimizer, 90)
+train(mlp_model, criterion, mlp_optimizer, 100)
 print("CNN")
-train(cnn_model, criterion, cnn_optimizer, 90)
+train(cnn_model, criterion, cnn_optimizer, 100)
 print("RNN")
-train(rnn_model, criterion, rnn_optimizer, 90)
+train(rnn_model, criterion, rnn_optimizer, 100)
 
-# Evaluate models
+# Evaluacia modelov
 mlp_accuracy = evaluate_model(mlp_model, test_loader)
 cnn_accuracy = evaluate_model(cnn_model, test_loader)
 rnn_accuracy = evaluate_model(rnn_model, test_loader)
@@ -243,9 +253,27 @@ rnn_accuracy = evaluate_model(rnn_model, test_loader)
 # In[18]:
 
 
+def classify_samples(model, tensor):
+    # Pass the samples through the model
+    model.eval()  # Set the model to evaluation mode
+    with torch.no_grad():
+        predictions = model(new_samples_tensor)
+        _, predicted_classes = torch.max(predictions, 1)
+    
+    # Print the class names
+    for i, index in enumerate(predicted_classes):
+        print(f"Sample {i+1}: {iris['target_names'][index]}")
+
+
+# In[19]:
+
+
 print(f'MLP Accuracy: {mlp_accuracy}%')
 print(f'CNN Accuracy: {cnn_accuracy}%')
 print(f'RNN Accuracy: {rnn_accuracy}%')
+print("================================")
+
+# Testuje nové vzorky na MLP modeli, transformuje ich, konvertuje na tenzory, predpovedá triedy a vypisuje názvy predpovedaných tried
 
 new_samples = np.array([
     [5.1, 3.5, 1.4, 0.2],
@@ -258,16 +286,13 @@ new_samples = np.array([
 # Scale the samples
 new_samples_scaled = scaler.transform(new_samples)
 
-# Convert to PyTorch tensor
+# Konvertovanie na tensor
 new_samples_tensor = torch.tensor(new_samples_scaled, dtype=torch.float32)
 
-# Pass the samples through the MLP model
-mlp_model.eval()  # Set the model to evaluation mode
-with torch.no_grad():
-    predictions = mlp_model(new_samples_tensor)
-    _, predicted_classes = torch.max(predictions, 1)
-
-# Print the class names
-for i, index in enumerate(predicted_classes):
-    print(f"Sample {i+1}: {iris['target_names'][index]}")
+print("MLP")
+classify_samples(mlp_model, new_samples_tensor)
+print("CNN")
+classify_samples(cnn_model, new_samples_tensor)
+print("RNN")
+classify_samples(rnn_model, new_samples_tensor)
 

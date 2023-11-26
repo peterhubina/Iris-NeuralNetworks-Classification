@@ -71,8 +71,6 @@ train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False)
 
 # Neural network architecture
-
-
 class Classifier(nn.Module):
     def __init__(self):
         super(Classifier, self).__init__()

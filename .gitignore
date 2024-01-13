@@ -170,3 +170,4 @@ cython_debug/
 /.ipynb_checkpoints
 Dokumentácia.docx
 Dokumentácia.pdf
+main.py

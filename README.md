@@ -1,6 +1,8 @@
 # Iris Neural Networks Classification
 
-This repository contains the implementation of three types of neural networks — Multilayer Perceptron (MLP), Convolutional Neural Network (CNN), and Recurrent Neural Network (RNN)—for classifying the Iris dataset. The implementation is done using PyTorch and scikit-learn.
+This repository contains the implementation of three types of neural networks for classifying the Iris dataset. 
+
+Implemented Neural Networks - Multilayer Perceptron (MLP), Convolutional Neural Network (CNN), and Recurrent Neural Network (RNN). The implementation is done using PyTorch and scikit-learn.
 
 ## Usage
 
